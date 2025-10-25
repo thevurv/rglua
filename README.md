@@ -1,3 +1,45 @@
+# ⚠️ Deprecated
+
+There is a new, nicer to use, slimmer rglua on the horizon.
+
+For the lua api equivalent to rglua, [autorun-lua](https://github.com/thevurv/Autorun-ng/tree/master/packages/autorun-lua)  
+For access to source sdk bindings for gmod, [autorun-interfaces](https://github.com/thevurv/Autorun-ng/tree/master/packages/autorun-interfaces)
+
+Don't let their names scare you. They're a part of the new Autorun-ng project, but similar to how rglua was to Autorun-rs, they will be able to be used outside of Autorun-ng.
+
+Here's an example.
+
+```rs
+/// A basic example of creating a binary module using `autorun-lua`
+/// Add this to your deps
+/// { git = "https://github.com/thevurv/Autorun-ng", package = "autorun-lua" }
+use autorun_lua::*;
+
+// Or return anyhow::Result<f64>
+fn lua_adder(lua: &LuaApi, state: *mut LuaState) -> Result<f64, Box<dyn std::error::Error>> {
+	let x = lua.check_number(state, 1);
+	let y = lua.check_number(state, 2);
+
+	// This pushes it onto lua's stack for you.
+	// You can return multiple values via a tuple of values
+	// Additionally, Option<T> values work too, where None pushes nil.
+	Ok(x + y)
+}
+
+#[unsafe(no_mangle)]
+pub extern "C-unwind" fn gmod13_open(state: *mut LuaState) -> std::ffi::c_int {
+	let lua = autorun_lua::get_api().expect("Failed to get lua api");
+
+	lua.push_globals(state); // Push _G
+
+	lua.push(state, "adder");
+	lua.push(state, as_lua_function!(lua_adder));
+	lua.set_table(state, -3); // _G["adder"] = lua_adder
+
+	0
+}
+```
+
 # 🌑 ``rglua`` [![cratesio](https://img.shields.io/crates/v/rglua.svg)](https://crates.io/crates/rglua) ![Build Status](https://github.com/Vurv78/rglua/actions/workflows/ci.yml/badge.svg) [![License](https://img.shields.io/github/license/Vurv78/rglua?color=red)](https://opensource.org/licenses/Apache-2.0) [![github/Vurv78](https://img.shields.io/discord/824727565948157963?label=Discord&logo=discord&logoColor=ffffff&labelColor=7289DA&color=2c2f33)](https://discord.gg/epJFC6cNsw)
 
 This is a crate that allows interop with the (g)luajit c api as well as the source sdk through libloading and vtable bindings.
